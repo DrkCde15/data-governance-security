@@ -1,0 +1,9 @@
+# Lock das dependências de dev/test (G5). Gerado com `pip freeze` filtrado.
+# Regenerar num venv limpo com: pip install -e ".[dev]" && pip freeze > requirements.lock
+iniconfig==2.3.0
+packaging==26.0
+pluggy==1.6.0
+pygments==2.19.2
+pytest==9.1.1
+python-dotenv==1.0.1
+ruff==0.16.10
