@@ -74,7 +74,9 @@ streamlit run app.py
 ```
 
 Abre catálogo, simulador de acesso e cauda da auditoria — tudo só leitura
-(conexão SQLite `mode=ro`; o simulador não grava na trilha).
+(conexão SQLite `mode=ro`; o simulador não grava na trilha). O perfil é
+escolhido na sidebar (login simulado): a aba Auditoria só abre para
+`auditor`/`admin`, pela mesma política do `can_read()`.
 
 ## Próximas etapas
 

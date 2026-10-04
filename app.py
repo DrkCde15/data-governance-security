@@ -36,6 +36,14 @@ def main() -> None:
     st.set_page_config(page_title="Governança de Dados — demo", layout="wide")
     st.title("Governança e Segurança de Dados — demo local")
 
+    perfil = st.sidebar.selectbox(
+        "Perfil (login simulado)", sorted(ROLES), index=sorted(ROLES).index("data_analyst")
+    )
+    st.sidebar.caption("Autenticação simulada: sem senha, só para demo da política.")
+    pode_ver_auditoria = check_access(
+        AccessRequest(perfil, perfil, "audit_log", Classification.PUBLIC, "read")
+    )
+
     settings = load_settings()
     if not settings.database_path.exists():
         st.warning("Banco não encontrado. Rode `python scripts/init_db.py` primeiro.")
@@ -45,14 +53,6 @@ def main() -> None:
         catalog = conn.execute(
             "SELECT table_name, classification, description FROM data_assets ORDER BY table_name"
         ).fetchall()
-        total = conn.execute(
-            "SELECT COUNT(*) c, COALESCE(SUM(allowed), 0) ok FROM audit_log"
-        ).fetchone()
-
-    st.caption(
-        f"Banco: `{settings.database_path}` · {total['c']} eventos de auditoria, "
-        f"{total['ok']} permitidos"
-    )
 
     tab_catalog, tab_sim, tab_audit = st.tabs(["Catálogo", "Simulador", "Auditoria"])
 
@@ -83,27 +83,35 @@ def main() -> None:
 
     with tab_audit:
         st.subheader("Cauda da auditoria (só leitura)")
-        n = st.number_input("Eventos", min_value=5, max_value=200, value=20, step=5)
-        with open_readonly(settings.database_path) as conn:
-            rows = conn.execute(
-                "SELECT occurred_at, username, role, table_name, action, allowed"
-                " FROM audit_log ORDER BY id DESC LIMIT ?",
-                (int(n),),
-            ).fetchall()
-        st.dataframe(
-            [
-                {
-                    "quando": r["occurred_at"],
-                    "usuário": r["username"],
-                    "role": r["role"],
-                    "tabela": r["table_name"],
-                    "ação": r["action"],
-                    "permitido": bool(r["allowed"]),
-                }
-                for r in rows
-            ],
-            use_container_width=True,
-        )
+        if not pode_ver_auditoria:
+            st.error(f"NEGADO — o perfil `{perfil}` não pode ler `audit_log`.")
+        else:
+            with open_readonly(settings.database_path) as conn:
+                total = conn.execute(
+                    "SELECT COUNT(*) c, COALESCE(SUM(allowed), 0) ok FROM audit_log"
+                ).fetchone()
+            st.caption(f"{total['c']} eventos, {total['ok']} permitidos · banco `{settings.database_path}`")
+            n = st.number_input("Eventos", min_value=5, max_value=200, value=20, step=5)
+            with open_readonly(settings.database_path) as conn:
+                rows = conn.execute(
+                    "SELECT occurred_at, username, role, table_name, action, allowed"
+                    " FROM audit_log ORDER BY id DESC LIMIT ?",
+                    (int(n),),
+                ).fetchall()
+            st.dataframe(
+                [
+                    {
+                        "quando": r["occurred_at"],
+                        "usuário": r["username"],
+                        "role": r["role"],
+                        "tabela": r["table_name"],
+                        "ação": r["action"],
+                        "permitido": bool(r["allowed"]),
+                    }
+                    for r in rows
+                ],
+                use_container_width=True,
+            )
 
 
 if __name__ == "__main__":
