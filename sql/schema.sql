@@ -1,5 +1,5 @@
 -- Governance schema (SQLite-compatible; PostgreSQL migration is future work).
--- Tables: roles/users, data catalog (assets), grants, immutable-by-convention audit log.
+-- Tables: roles/users, data catalog (assets), grants, append-only audit log (triggers).
 
 CREATE TABLE IF NOT EXISTS roles (
     role_name TEXT PRIMARY KEY
@@ -37,3 +37,36 @@ CREATE TABLE IF NOT EXISTS access_grants (
     can_write INTEGER NOT NULL CHECK (can_write IN (0,1)),
     PRIMARY KEY (role_name, table_name)
 );
+
+-- PII demo (G6): dados 100% fictícios. Raw SENSITIVE (só admin lê);
+-- consumo analítico pela view mascarada (INTERNAL, legível por analyst).
+CREATE TABLE IF NOT EXISTS customers_raw (
+    customer_id TEXT PRIMARY KEY,
+    full_name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    cpf TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE VIEW IF NOT EXISTS dim_customers_masked AS
+SELECT
+    customer_id,
+    substr(full_name, 1, 1) || '.***' AS full_name,
+    substr(email, 1, 1) || '***@***' AS email,
+    '***.***.***-' || substr(cpf, -2, 2) AS cpf,
+    created_at
+FROM customers_raw;
+
+-- Trilha de auditoria append-only por enforcement (G2): UPDATE/DELETE abortam.
+-- Dissuasão em arquivo local; garantia real só no Postgres futuro com grants.
+CREATE TRIGGER IF NOT EXISTS audit_log_no_update
+BEFORE UPDATE ON audit_log
+BEGIN
+    SELECT RAISE(ABORT, 'audit_log e append-only');
+END;
+
+CREATE TRIGGER IF NOT EXISTS audit_log_no_delete
+BEFORE DELETE ON audit_log
+BEGIN
+    SELECT RAISE(ABORT, 'audit_log e append-only');
+END;

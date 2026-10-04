@@ -5,6 +5,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from data_governance.authz import AccessRequest, check_access, log_and_check
 from data_governance.models import AUDIT_TABLES, Classification
 
@@ -105,3 +107,22 @@ def test_audit_log_records_decisions(tmp_path: Path, monkeypatch) -> None:
     with sqlite3.connect(db) as conn:
         rows = conn.execute("SELECT allowed FROM audit_log ORDER BY id").fetchall()
     assert [r[0] for r in rows] == [1, 0]
+
+
+def test_audit_log_append_only() -> None:
+    """UPDATE/DELETE em audit_log abortam (G2)."""
+    import data_governance.config as cfg
+
+    settings = cfg.load_settings()
+    schema = (settings.project_root / "sql" / "schema.sql").read_text(encoding="utf-8")
+    with sqlite3.connect(":memory:") as conn:
+        conn.executescript(schema)
+        conn.execute(
+            "INSERT INTO audit_log (occurred_at, username, role, table_name, action, allowed)"
+            " VALUES ('2024-01-01T00:00:00+00:00', 'a', 'admin', 't', 'read', 1)"
+        )
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute("UPDATE audit_log SET allowed = 0 WHERE id = 1")
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute("DELETE FROM audit_log WHERE id = 1")
+        assert conn.execute("SELECT COUNT(*) FROM audit_log").fetchone()[0] == 1

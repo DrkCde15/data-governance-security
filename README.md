@@ -23,7 +23,7 @@ scripts/init_db.py → cria tabelas + roles/usuários/catálogo fictícios
         │
 src/data_governance/{models.py, authz.py} → can_read/can_write + log_and_check()
         │
-scripts/demo_access.py → 6 acessos demo (permitido/negado) + cauda da auditoria
+scripts/demo_access.py → 8 acessos demo (permitido/negado) + cauda da auditoria
 ```
 
 Roles: `admin` (total), `data_engineer` (técnico leitura/escrita),
@@ -46,6 +46,7 @@ Nenhum recurso AWS é criado. Sem custo.
 
 ```text
 data-governance-security/
+├── app.py               # demo web só-leitura (Streamlit, extra "demo")
 ├── sql/{schema.sql,seeds.sql}
 ├── src/data_governance/{config,models,authz}.py
 ├── scripts/{init_db,demo_access}.py
@@ -65,9 +66,19 @@ python scripts/demo_access.py
 pytest
 ```
 
+## Demo web (opcional)
+
+```bash
+pip install -e ".[demo]"
+streamlit run app.py
+```
+
+Abre catálogo, simulador de acesso e cauda da auditoria — tudo só leitura
+(conexão SQLite `mode=ro`; o simulador não grava na trilha).
+
 ## Próximas etapas
 
-1. Masking de PII (views `*_masked`) + testes de vazamento.
+1. ~~Masking de PII (views `*_masked`) + testes de vazamento~~ — feito (G6).
 2. Row/column-level security e grants por asset.
 3. Catálogo com dono, SLA e lineage mínimo.
 4. Migração do SQLite para PostgreSQL + IAM (somente conceito, sem custo).

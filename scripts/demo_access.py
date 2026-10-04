@@ -26,6 +26,8 @@ DEMO = [
     ("carol_analyst", "data_analyst", "bronze_transactions", Classification.CONFIDENTIAL, "read"),
     ("dave_auditor", "auditor", "audit_log", Classification.PUBLIC, "read"),
     ("dave_auditor", "auditor", "gold_daily_volume", Classification.INTERNAL, "write"),
+    ("carol_analyst", "data_analyst", "dim_customers_masked", Classification.INTERNAL, "read"),
+    ("carol_analyst", "data_analyst", "customers_raw", Classification.SENSITIVE, "read"),
 ]
 
 
