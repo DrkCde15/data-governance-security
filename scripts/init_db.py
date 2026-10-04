@@ -1,6 +1,6 @@
-"""CLI: initialize local SQLite governance DB (schema + seeds, idempotent).
+"""CLI: inicializa o banco SQLite local de governança (schema + seeds, idempotente).
 
-Usage:
+Uso:
     python scripts/init_db.py
 """
 
@@ -18,7 +18,7 @@ logger = setup_logging()
 
 
 def main() -> int:
-    """Create schema and seeds. Returns exit code."""
+    """Cria schema e seeds. Retorna o código de saída."""
     settings = load_settings()
     root = settings.project_root
     db_path = settings.database_path

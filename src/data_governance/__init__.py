@@ -1,4 +1,4 @@
-"""Data governance & security (local RBAC + audit simulation)."""
+"""Governança e segurança de dados (RBAC local + simulação de auditoria)."""
 
 __all__ = ["__version__"]
 

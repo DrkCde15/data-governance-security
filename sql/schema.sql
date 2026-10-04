@@ -27,3 +27,13 @@ CREATE TABLE IF NOT EXISTS audit_log (
     action TEXT NOT NULL CHECK (action IN ('read','write')),
     allowed INTEGER NOT NULL CHECK (allowed IN (0,1))
 );
+
+-- Per-asset grants (Etapa 2; policy enforcement is future work).
+-- Exists now so AUDIT_TABLES / docs promises hold; empty until grants are seeded.
+CREATE TABLE IF NOT EXISTS access_grants (
+    role_name TEXT NOT NULL REFERENCES roles(role_name),
+    table_name TEXT NOT NULL REFERENCES data_assets(table_name),
+    can_read INTEGER NOT NULL CHECK (can_read IN (0,1)),
+    can_write INTEGER NOT NULL CHECK (can_write IN (0,1)),
+    PRIMARY KEY (role_name, table_name)
+);

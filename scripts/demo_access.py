@@ -1,8 +1,8 @@
-"""CLI demo: a few allowed/denied accesses + audit tail.
+"""CLI demo: alguns acessos permitidos/negados + cauda da auditoria.
 
-Usage:
+Uso:
     python scripts/demo_access.py
-Requires: python scripts/init_db.py (first).
+Requer: python scripts/init_db.py (antes).
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ DEMO = [
 
 
 def main() -> int:
-    """Run demo accesses and print the audit tail. Returns exit code."""
+    """Executa os acessos demo e imprime a cauda da auditoria. Retorna o código de saída."""
     settings = load_settings()
     if not settings.database_path.exists():
         logger.error("DB not found. Run python scripts/init_db.py first.")

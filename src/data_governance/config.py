@@ -1,4 +1,4 @@
-"""Centralized configuration."""
+"""Configuração centralizada."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def get_project_root() -> Path:
-    """Return project root (folder containing pyproject.toml)."""
+    """Retorna a raiz do projeto (pasta que contém o pyproject.toml)."""
     current = Path(__file__).resolve()
     for parent in [current.parent, *current.parents]:
         if (parent / "pyproject.toml").exists():
@@ -18,7 +18,7 @@ def get_project_root() -> Path:
 
 
 def setup_logging(level: str | None = None) -> logging.Logger:
-    """Configure root logging once and return a namespaced logger."""
+    """Configura o logging raiz uma vez e retorna um logger do namespace."""
     resolved = (level or os.getenv("LOG_LEVEL", "INFO")).upper()
     logging.basicConfig(
         level=getattr(logging, resolved, logging.INFO),
@@ -29,7 +29,7 @@ def setup_logging(level: str | None = None) -> logging.Logger:
 
 @dataclass(frozen=True)
 class Settings:
-    """Immutable runtime settings."""
+    """Configurações imutáveis de execução."""
 
     project_root: Path
     database_path: Path
@@ -37,7 +37,7 @@ class Settings:
 
 
 def load_settings() -> Settings:
-    """Load settings from environment with local defaults."""
+    """Carrega as configurações do ambiente, com padrões locais."""
     try:
         from dotenv import load_dotenv  # type: ignore
     except ImportError:

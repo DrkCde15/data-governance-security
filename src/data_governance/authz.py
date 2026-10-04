@@ -1,7 +1,8 @@
-"""Authorization + audit helpers over SQLite (stdlib only).
+"""Autorização + helpers de auditoria sobre SQLite (só stdlib).
 
-Every access check writes one row to audit_log (allowed/denied), giving
-traceability from stage 1. Row/column masking and real IAM are future work.
+Cada verificação de acesso grava uma linha em audit_log (permitido/negado),
+dando rastreabilidade desde a etapa 1. Masking por linha/coluna e IAM real
+são trabalhos futuros.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class AccessRequest:
-    """A single access attempt."""
+    """Uma tentativa de acesso."""
 
     username: str
     role: str
@@ -36,7 +37,7 @@ def _connect(db_path: Path) -> sqlite3.Connection:
 
 
 def check_access(request: AccessRequest) -> bool:
-    """Pure policy check (no I/O): True if allowed."""
+    """Verificação pura da política (sem I/O): True se permitido."""
     if request.action == "read":
         return can_read(request.role, request.classification, request.table)
     if request.action == "write":
@@ -45,7 +46,7 @@ def check_access(request: AccessRequest) -> bool:
 
 
 def log_and_check(db_path: Path, request: AccessRequest) -> bool:
-    """Check policy AND append the decision to audit_log. Returns allowed."""
+    """Verifica a política E registra a decisão em audit_log. Retorna permitido."""
     allowed = check_access(request)
     now = datetime.now(timezone.utc).isoformat()
     with _connect(db_path) as conn:

@@ -7,6 +7,9 @@
 - SQLite local via stdlib: zero dependências, migra para PostgreSQL depois.
 - Auditor com acesso garantido a `audit_log`, `data_assets`, `access_grants`
   (metadados), e escrita sempre negada.
+- `audit_log` e `access_grants` são restritos a auditor/admin por nome de
+  tabela (`RESTRICTED_TABLES`), mesmo classificados como PUBLIC nos seeds.
+  O catálogo (`data_assets`) permanece legível por todos para descoberta.
 
 ## Decisões
 

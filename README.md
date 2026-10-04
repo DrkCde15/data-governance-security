@@ -23,12 +23,16 @@ scripts/init_db.py → cria tabelas + roles/usuários/catálogo fictícios
         │
 src/data_governance/{models.py, authz.py} → can_read/can_write + log_and_check()
         │
-scripts/demo_access.py → 6 acessos demo (allowed/denied) + tail da auditoria
+scripts/demo_access.py → 6 acessos demo (permitido/negado) + cauda da auditoria
 ```
 
-Roles: `admin` (total), `data_engineer` (técnico R/W), `data_analyst`
-(analítico R-only), `auditor` (logs/metadados R-only).
+Roles: `admin` (total), `data_engineer` (técnico leitura/escrita),
+`data_analyst` (analítico só leitura), `auditor` (logs/metadados só leitura).
 Classificações: PUBLIC < INTERNAL < CONFIDENTIAL < SENSITIVE.
+
+Regra de auditoria: `audit_log` e `access_grants` só são legíveis por
+`auditor`/`admin` (por nome de tabela); o catálogo (`data_assets`) é legível
+por todos para descoberta.
 
 Futuro: masking, row/column-level security, lineage, data catalog, AWS IAM
 como conceito, PostgreSQL/Delta Unity Catalog.
@@ -54,9 +58,9 @@ data-governance-security/
 
 ```bash
 cd data-governance-security
-pip install -e ".[dev]"
+pip install -e ".[dev]"   # instala pacote + pytest (pytest também roda sem instalar, via pythonpath)
 cp .env.example .env   # opcional
-python scripts/init_db.py
+python scripts/init_db.py   # idempotente; cria também access_grants
 python scripts/demo_access.py
 pytest
 ```

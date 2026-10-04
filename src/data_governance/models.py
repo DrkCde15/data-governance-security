@@ -1,12 +1,12 @@
-"""Domain models: roles, classifications, and access policy (RBAC simulation).
+"""Modelos de domínio: roles, classificações e política de acesso (simulação RBAC).
 
-Roles (stage 1):
-  admin          -> full access (all classifications, read + write)
-  data_engineer  -> read/write on technical data (INTERNAL and below + CONFIDENTIAL read)
-  data_analyst   -> read-only on analytical data (PUBLIC + INTERNAL)
-  auditor        -> read-only on logs/metadata (PUBLIC + audit tables)
+Roles (etapa 1):
+  admin          -> acesso total (todas as classificações, leitura + escrita)
+  data_engineer  -> leitura/escrita em dados técnicos (INTERNAL e abaixo + leitura CONFIDENTIAL)
+  data_analyst   -> somente leitura em dados analíticos (PUBLIC + INTERNAL)
+  auditor        -> somente leitura em logs/metadados (PUBLIC + tabelas de auditoria)
 
-Classifications: PUBLIC < INTERNAL < CONFIDENTIAL < SENSITIVE.
+Classificações: PUBLIC < INTERNAL < CONFIDENTIAL < SENSITIVE.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from enum import Enum
 
 
 class Classification(str, Enum):
-    """Data sensitivity levels (ordered)."""
+    """Níveis de sensibilidade dos dados (ordenados)."""
 
     PUBLIC = "PUBLIC"
     INTERNAL = "INTERNAL"
@@ -26,7 +26,7 @@ class Classification(str, Enum):
 
 @dataclass(frozen=True)
 class Role:
-    """A named role with allowed classifications and write flag."""
+    """Uma role nomeada, com classificações legíveis e flag de escrita."""
 
     name: str
     readable: frozenset[Classification]
@@ -58,22 +58,29 @@ ROLES: dict[str, Role] = {
     ),
 }
 
-# Tables the auditor may always read (logs/metadata), regardless of classification.
+# Tabelas que o auditor sempre pode ler (logs/metadados), independente da classificação.
 AUDIT_TABLES = frozenset({"audit_log", "data_assets", "access_grants"})
+
+# Trilha de auditoria + grants são restritos: só auditor/admin podem lê-las,
+# mesmo classificadas como PUBLIC nos seeds. O catálogo (data_assets) segue
+# legível por todos para descoberta.
+RESTRICTED_TABLES = frozenset({"audit_log", "access_grants"})
 
 
 def can_read(role_name: str, classification: Classification, table: str) -> bool:
-    """Return True if role may read a table with the given classification."""
+    """Retorna True se a role pode ler a tabela com a classificação dada."""
     role = ROLES.get(role_name)
     if role is None:
         return False
+    if table in RESTRICTED_TABLES:
+        return role_name in ("auditor", "admin")
     if role_name == "auditor" and table in AUDIT_TABLES:
         return True
     return classification in role.readable
 
 
 def can_write(role_name: str, classification: Classification) -> bool:
-    """Return True if role may write data with the given classification."""
+    """Retorna True se a role pode escrever dados com a classificação dada."""
     role = ROLES.get(role_name)
     if role is None:
         return False
